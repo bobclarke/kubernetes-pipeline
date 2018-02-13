@@ -1,0 +1,6 @@
+**/terraform.tfvars
+**/terraform.tfstate*
+**/*.orig
+**/kops
+kismatic/**
+terraform/.terraform/**
