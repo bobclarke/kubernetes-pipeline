@@ -1,1 +1,4 @@
-# pipeline-k8s
+Pre-reqs
+========
+
+Install terraform, aws cli and kops
