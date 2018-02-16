@@ -1,4 +1,6 @@
-Pre-reqs
-========
+pipeline-k8s
+============
 
-Install terraform, aws cli and kops
+Experimenting with building a "CI/CD pipleine in a box"
+
+Work in progress
