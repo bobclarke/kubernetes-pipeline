@@ -1,5 +1,5 @@
-pipeline-k8s
-============
+kubernetes-pipeline
+===================
 
 Experimenting with building a "CI/CD pipleine in a box"
 
