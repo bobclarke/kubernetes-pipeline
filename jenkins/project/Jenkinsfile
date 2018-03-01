@@ -11,16 +11,9 @@ def     unitTester = ['tests/unit.groovy']
 def     analyser =  [ 'tests/sonar.groovy', 'tests/checkstyle.groovy' ]
 def     integrationTester = [ 'tests/integration.groovy' ]
 
-
-PipelineHandlers handlers = new Handlers(	
-							packager,
-							deployer,
-							unitTester,
-							analyser,
-							integrationTester) as PipelineHandlers
-
+Handlers handlers = new Handlers(packager, deployer, unitTester, analyser, integrationTester) as Handlers
 
 String notify = 'admin@exmaple.com'
 Integer timeout = 100
 
-invokeBuildPipelineHawk( 'project-1', handlers, configuration, notify , timeout )
+invokePipeline( 'project-1', handlers, configuration, notify , timeout )
