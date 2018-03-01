@@ -1,0 +1,13 @@
+"nexus": {
+  "url": "https://example.com/nexus/content/repositories/releases/artifacts",
+  "credentials": "nexus-creds"
+},
+"sonar": {
+  "exclusions": "specs/**,src/resources/**,**/index.**,**/*.spec.*,src/config/**,src/*.config.js",
+  "inclusions": "src/components/**,src/containers/**,src/utils/**",
+  "coverage_exclusions": "Jenkinsfile",
+  "quality_gate": "SONAR",
+  "server_id": "SONAR-main",
+  "sources": ".",
+  "coverage_report_file":"lcov.info"
+}
