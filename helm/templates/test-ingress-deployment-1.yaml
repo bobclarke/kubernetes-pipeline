@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    run: test-ingress-1
+  name: test-ingress-1
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: test-ingress-1
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: test-ingress-1
+    spec:
+      containers:
+      - image: bobclarke/test-ingress
+        name: test-ingress-1
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        resources: {}
+status: {}
