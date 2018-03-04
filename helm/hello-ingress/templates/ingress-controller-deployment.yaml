@@ -12,9 +12,6 @@ spec:
     metadata:
       labels:
         app: ingress-controller
-      annotations:
-        prometheus.io/port: '10254'
-        prometheus.io/scrape: 'true' 
     spec:
       containers:
         - name: nginx-ingress-controller
@@ -35,22 +32,3 @@ spec:
           ports:
           - name: http
             containerPort: 80
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /healthz
-              port: 10254
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
-          readinessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /healthz
-              port: 10254
-              scheme: HTTP
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 1
