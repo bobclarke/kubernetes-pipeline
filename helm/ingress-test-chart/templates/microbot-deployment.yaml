@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    run: microbot
+  name: microbot-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: microbot
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        run: microbot
+    spec:
+      containers:
+      - image: rothgar/microbot:v1
+        name: microbot
+        ports:
+        - containerPort: 80
