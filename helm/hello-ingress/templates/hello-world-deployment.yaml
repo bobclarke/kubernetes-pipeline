@@ -1,0 +1,26 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    run: load-balancer-example
+  name: hello-world
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: load-balancer-example
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: load-balancer-example
+    spec:
+      containers:
+      - image: gcr.io/google-samples/node-hello:1.0
+        name: hello-world
+        ports:
+        - containerPort: 8080
+        resources: {}
+status: {}
