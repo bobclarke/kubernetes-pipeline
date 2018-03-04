@@ -1,21 +1,19 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  creationTimestamp: null
-  labels:
-    run: load-balancer-example
   name: hello-world
+  labels:
+    run: hello-world
 spec:
   replicas: 1
   selector:
     matchLabels:
-      run: load-balancer-example
-  strategy: {}
+      run: hello-world
   template:
     metadata:
       creationTimestamp: null
       labels:
-        run: load-balancer-example
+        run: hello-world
     spec:
       containers:
       - image: gcr.io/google-samples/node-hello:1.0

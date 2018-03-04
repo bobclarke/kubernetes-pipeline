@@ -7,7 +7,7 @@ spec:
   - host: minikube
     http:
       paths: 
-      - path: /jenkins
+      - path: /hello-world
         backend:
-          serviceName: hello-world-cip
+          serviceName: hello-world
           servicePort: 8080
