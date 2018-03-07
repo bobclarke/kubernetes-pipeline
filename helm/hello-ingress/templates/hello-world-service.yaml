@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: hello-world
   labels:
-    run: load-balancer-example
+    run: hello-world
 spec:
   ports:
   - port: 8080
     protocol: TCP
     targetPort: 8080
   selector:
-    run: load-balancer-example
+    run: hello-world
