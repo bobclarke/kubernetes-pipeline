@@ -12,7 +12,7 @@ Master:
   Component: "jenkins-master"
   UseSecurity: true
   AdminUser: admin
-  # AdminPassword: <defaults to random>
+  AdminPassword: admin
   Cpu: "200m"
   Memory: "256Mi"
   # Set min/max heap here if needed with:
@@ -26,7 +26,7 @@ Master:
   ServicePort: 8080
   # For minikube, set this to NodePort, elsewhere use LoadBalancer
   # Use ClusterIP if your setup includes ingress controller
-  ServiceType: LoadBalancer
+  ServiceType: NodePort
   # Master Service annotations
   ServiceAnnotations: {}
   #   service.beta.kubernetes.io/aws-load-balancer-backend-protocol: https
@@ -62,7 +62,11 @@ Master:
   #   - "new groovy.json.JsonSlurperClassic"
   # List of groovy init scripts to be executed during Jenkins master start
   InitScripts:
-  #  - |
+    - |
+        import jenkins.model.*
+        def jenkins = Jenkins.getInstance()
+        jenkins.setSystemMessage("Helm Test from Stack1")
+
   #    print 'adding global pipeline libraries, register properties, bootstrap jobs...'
   # Kubernetes secret that contains a 'credentials.xml' for Jenkins
   # CredentialsXmlSecret: jenkins-credentials
@@ -92,7 +96,7 @@ Master:
     #     - jenkins.cluster.local
 
 Agent:
-  Enabled: true
+  Enabled: false
   Image: jenkins/jnlp-slave
   ImageTag: 3.10-1
 # ImagePullSecret: jenkins
@@ -115,7 +119,7 @@ Agent:
   # jenkins-agent: v1
 
 Persistence:
-  Enabled: true
+  Enabled: false
   ## A manually managed Persistent Volume and Claim
   ## Requires Persistence.Enabled: true
   ## If defined, PVC must be created manually before volume will be bound
