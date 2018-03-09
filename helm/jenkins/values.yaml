@@ -74,6 +74,30 @@ Master:
         WorkflowJob job = Jenkins.instance.createProject(WorkflowJob, 'hw')
         def definition = new CpsScmFlowDefinition(new GitSCM('https://github.com/bobclarke/hw.git'), 'pipeline/Jenkinsfile')
         job.definition = definition
+    - |
+        import org.jenkinsci.plugins.workflow.libs.*
+        import jenkins.plugins.git.GitSCMSource
+
+        GlobalLibraries descriptor = (GlobalLibraries) GlobalLibraries.get()
+
+        GitSCMSource scmSource = new GitSCMSource('12345',
+                                    'https://github.com/bobclarke/kubernetes-pipeline.git',
+                                    'credentialsId',
+                                    'origin',
+                                    '+refs/heads/*:refs/remotes/origin/*',
+                                    '*',
+                                    '',
+                                    false)
+
+        SCMSourceRetriever retriever = new SCMSourceRetriever(scmSource)
+
+        LibraryConfiguration libraryConfiguration = new LibraryConfiguration('plib', retriever)
+        libraryConfiguration.setDefaultVersion('1.0.0')
+        libraryConfiguration.setImplicit(false)
+        libraryConfiguration.setAllowVersionOverride(true)
+
+        descriptor.getLibraries().add(libraryConfiguration)
+        descriptor.save()
 
   #    print 'adding global pipeline libraries, register properties, bootstrap jobs...'
   # Kubernetes secret that contains a 'credentials.xml' for Jenkins
