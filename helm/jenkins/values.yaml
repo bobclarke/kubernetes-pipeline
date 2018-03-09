@@ -72,7 +72,7 @@ Master:
         import org.jenkinsci.plugins.workflow.cps.CpsScmFlowDefinition
         import hudson.plugins.git.GitSCM
         WorkflowJob job = Jenkins.instance.createProject(WorkflowJob, 'hw')
-        def definition = new CpsScmFlowDefinition(new GitSCM('https://github.com/bobclarke/hw.git'), 'Jenkinsfile')
+        def definition = new CpsScmFlowDefinition(new GitSCM('https://github.com/bobclarke/hw.git'), 'pipeline/Jenkinsfile')
         job.definition = definition
 
   #    print 'adding global pipeline libraries, register properties, bootstrap jobs...'
