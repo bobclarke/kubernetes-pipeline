@@ -6,7 +6,6 @@ Experimenting with building an "Ephemeral CI/CD pipleine in a box"
 Work in progress
 
 ### Todo
-
 IAM Stuff to be automated
 ```
 aws iam create-group --group-name kops
