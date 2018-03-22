@@ -7,5 +7,6 @@ public interface Handlers {
 	List<String> getUnitTests()
 	List<String> getStaticAnalysis()
 	List<String> getIntegrationTests()
+	
 }
 
