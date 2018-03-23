@@ -1,6 +1,8 @@
 kind: Service
 apiVersion: v1
 metadata:
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: green.k8s1.bobclarke.info.
   name: nginx-green
 spec:
   selector:
