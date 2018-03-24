@@ -5,8 +5,7 @@ Experimenting with building an "Ephemeral CI/CD pipleine in a box"
 
 Work in progress
 
-
-### Todo
+## Todo
 IAM Stuff to be automated
 ```
 aws iam create-group --group-name kops
@@ -21,11 +20,18 @@ aws iam add-user-to-group --user-name kops --group-name kops
 aws iam create-access-key --user-name kops
 
 ```
-Create the followning AWS IAM policy
+# Kops config 
+
 ```
-{
-    "Version": "2012-10-17",
-    "Statement": [
+apiVersion: kops/v1alpha2
+kind: Cluster
+metadata:
+  creationTimestamp: 2018-03-24T21:25:17Z
+  name: cluster1.bobclarke.info
+spec:
+  additionalPolicies:
+    master: |
+      [
         {
             "Effect": "Allow",
             "Action": [
@@ -45,11 +51,67 @@ Create the followning AWS IAM policy
                 "*"
             ]
         }
-    ]
-}
+      ]
+          node: |
+      [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "route53:ChangeResourceRecordSets"
+            ],
+            "Resource": [
+                "arn:aws:route53:::hostedzone/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "route53:ListHostedZones",
+                "route53:ListResourceRecordSets"
+            ],
+            "Resource": [
+                "*"
+            ]
+        }
+      ]
+  api:
+    dns: {}
+  authorization:
+    alwaysAllow: {}
+  channel: stable
+  cloudProvider: aws
+  configBase: s3://k8s-bobclarke-info-state-store/cluster1.bobclarke.info
+  etcdClusters:
+  - etcdMembers:
+    - instanceGroup: master-us-east-1a
+      name: a
+    name: main
+  - etcdMembers:
+    - instanceGroup: master-us-east-1a
+      name: a
+    name: events
+  iam:
+    allowContainerRegistry: true
+    legacy: false
+      kubernetesApiAccess:
+  - 0.0.0.0/0
+  kubernetesVersion: 1.8.7
+  masterInternalName: api.internal.cluster1.bobclarke.info
+  masterPublicName: api.cluster1.bobclarke.info
+  networkCIDR: 172.20.0.0/16
+  networking:
+    kubenet: {}
+  nonMasqueradeCIDR: 100.64.0.0/10
+  sshAccess:
+  - 0.0.0.0/0
+  subnets:
+  - cidr: 172.20.32.0/19
+    name: us-east-1a
+    type: Public
+    zone: us-east-1a
+  topology:
+    dns:
+      type: Public
+    masters: public
+    nodes: public
 ```
-Attach the above policy to the following Roles:
-- nodes.cluster1.bobclarke.info
-- masters.cluster1.bobclarke.info
-
-
