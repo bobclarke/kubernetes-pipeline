@@ -52,3 +52,4 @@ Attach the above policy to the following Roles:
 - nodes.cluster1.bobclarke.info
 - masters.cluster1.bobclarke.info
 
+
