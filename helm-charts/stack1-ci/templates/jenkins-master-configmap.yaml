@@ -3,7 +3,7 @@ apiVersion: v1
 kind: ConfigMap
 
 metadata:
-  name: {{ .Values.Project }}-jenkins-config
+  name: {{ .Release.Name }}-jenkins-config
 
 data:
   apply_config.sh: |-
@@ -19,8 +19,8 @@ data:
     /usr/local/bin/install-plugins.sh `echo $(cat /var/jenkins_home/plugins.txt)`;
 
     # Create job
-    mkdir -p /var/jenkins_home/jobs/{{ .Values.Project }}
-    cp -n /var/jenkins_config/job.xml /var/jenkins_home/jobs/{{ .Values.Project }}/config.xml;
+    mkdir -p /var/jenkins_home/jobs/{{ .Release.Name }}
+    cp -n /var/jenkins_config/job.xml /var/jenkins_home/jobs/{{ .Release.Name }}/config.xml;
 
   scriptApproval.xml: |-
     <scriptApproval plugin="script-security@1.41">
@@ -183,10 +183,10 @@ apiVersion: v1
 kind: ConfigMap
 
 metadata:
-  name: {{ .Values.Project }}-jenkins-tests
+  name: {{ .Release.Name }}-jenkins-tests
 
 data:
   run.sh: |-
     @test "Testing Jenkins UI is accessible" {
-      curl --retry 24 --retry-delay 10 {{ .Values.Project }}-jenkins:8080/login
+      curl --retry 24 --retry-delay 10 {{ .Release.Name }}-jenkins:8080/login
     }

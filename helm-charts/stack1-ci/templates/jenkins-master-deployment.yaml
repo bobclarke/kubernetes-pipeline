@@ -2,21 +2,21 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Values.Project }}-jenkins
+  name: {{ .Release.Name }}--jenkins
   labels:
-    component: "{{ .Values.Project }}-jenkins-master"
+    component: "{{ .Release.Name }}-jenkins-master"
 spec:
   replicas: 1
   strategy:
     type: RollingUpdate
   selector:
     matchLabels:
-      component: "{{ .Values.Project }}-jenkins-master"
+      component: "{{ .Release.Name }}-jenkins-master"
   template:
     metadata:
       labels:
-        app: {{ .Values.Project }}-jenkins
-        component: "{{ .Values.Project }}-jenkins-master"
+        app: {{ .Release.Name }}-jenkins
+        component: "{{ .Release.Name }}-jenkins-master"
       annotations:
         checksum/config: 91496c3e313e4a17590717b4a10615a0c10f90250e6e40ab23ffc92d88fc3b8a
     spec:
@@ -40,7 +40,7 @@ spec:
               name: secrets-dir
 
       containers:
-        - name: {{ .Values.Project }}-jenkins
+        - name: {{ .Release.Name }}-jenkins
           image: "jenkins/jenkins:lts"
           imagePullPolicy: "Always"
           args: [ "--argumentsRealm.passwd.$(ADMIN_USER)=$(ADMIN_PASSWORD)",  "--argumentsRealm.roles.$(ADMIN_USER)=admin"]
@@ -52,12 +52,12 @@ spec:
             - name: ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.Project }}-jenkins
+                  name: {{ .Release.Name }}-jenkins
                   key: jenkins-admin-password
             - name: ADMIN_USER
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.Project }}-jenkins
+                  name: {{ .Release.Name }}-jenkins
                   key: jenkins-admin-user
           ports:
             - containerPort: 8080
@@ -94,11 +94,11 @@ spec:
       volumes:
       - name: jenkins-config
         configMap:
-          name: {{ .Values.Project }}-jenkins-config
+          name: {{ .Release.Name }}-jenkins-config
 
       - name: jenkins-home
         hostPath:
-          path: /Users/bclar6/kubernetes/volumes/{{ .Values.Project }}-jenkins/home
+          path: /Users/bclar6/kubernetes/volumes/{{ .Values.Name }}-jenkins/home
 
       - name: plugin-dir
         emptyDir: {}
