@@ -1,7 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: nginx-blue
-data:
-  index.html: |-
-    <p>This is the blue instance</p>
