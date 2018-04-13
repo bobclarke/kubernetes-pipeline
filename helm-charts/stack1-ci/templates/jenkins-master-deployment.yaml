@@ -2,7 +2,7 @@
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}--jenkins
+  name: {{ .Release.Name }}-jenkins
   labels:
     component: "{{ .Release.Name }}-jenkins-master"
 spec:
@@ -97,8 +97,13 @@ spec:
           name: {{ .Release.Name }}-jenkins-config
 
       - name: jenkins-home
+      {{- if eq .Values.platform "minikube" }}
         hostPath:
-          path: /Users/bclar6/kubernetes/volumes/{{ .Values.Name }}-jenkins/home
+          path: /tmp/volumes/{{ .Release.Name }}-jenkins/home
+      {{ else }}
+        # Need to update this for EBS (if using AWS)
+        emptyDir: {}      
+      {{ end }}
 
       - name: plugin-dir
         emptyDir: {}

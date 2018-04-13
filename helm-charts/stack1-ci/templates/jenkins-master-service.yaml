@@ -15,4 +15,4 @@ spec:
       targetPort: 8080
   selector:
     component: "{{ .Release.Name }}-jenkins-master"
-  type: LoadBalancer
+  type: "{{ .Values.service.type }}"
