@@ -10,8 +10,10 @@ data:
     mkdir -p /usr/share/jenkins/ref/secrets/;
     echo "false" > /usr/share/jenkins/ref/secrets/slave-to-master-security-kill-switch;
 
+    # Copy configuration files to /var/jenkins_home
     cp -n /var/jenkins_config/config.xml /var/jenkins_home;
     cp -n /var/jenkins_config/scriptApproval.xml /var/jenkins_home;
+    cp -n /var/jenkins_config/org.jenkinsci.plugins.workflow.libs.GlobalLibraries.xml /var/jenkins_home
 
     # Install plugins
     cp /var/jenkins_config/plugins.txt /var/jenkins_home;
