@@ -127,6 +127,7 @@ data:
       <globalNodeProperties/>
       <noUsageStatistics>true</noUsageStatistics>
     </hudson>
+
   job.xml: |-
     <?xml version='1.0' encoding='UTF-8'?>
     <flow-definition plugin="workflow-job@2.15">
@@ -169,6 +170,34 @@ data:
         <triggers/>
         <disabled>false</disabled>
       </flow-definition>
+
+  org.jenkinsci.plugins.workflow.libs.GlobalLibraries.xml: |-
+  <?xml version='1.1' encoding='UTF-8'?>
+<org.jenkinsci.plugins.workflow.libs.GlobalLibraries plugin="workflow-cps-global-lib@2.9">
+  <libraries>
+    <org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+      <name>stack1-lib</name>
+      <retriever class="org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever">
+        <scm class="jenkins.plugins.git.GitSCMSource" plugin="git@3.7.0">
+          <id>a25cc6dc-97fa-4085-87d6-e34bb76f9f18</id>
+          <remote>https://github.com/bobclarke/kubernetes-pipeline-lib.git</remote>
+          <credentialsId></credentialsId>
+          <traits>
+            <jenkins.plugins.git.traits.BranchDiscoveryTrait/>
+          </traits>
+        </scm>
+      </retriever>
+      <implicit>false</implicit>
+      <allowVersionOverride>true</allowVersionOverride>
+      <includeInChangesets>true</includeInChangesets>
+    </org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+    <org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+      <name></name>
+      <implicit>false</implicit>
+      <allowVersionOverride>true</allowVersionOverride>
+      <includeInChangesets>true</includeInChangesets>
+    </org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+  </libraries>
 
   plugins.txt: |-
     workflow-aggregator:2.5
