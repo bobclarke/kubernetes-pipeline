@@ -207,6 +207,7 @@ data:
             </traits>
           </scm>
         </retriever>
+        <defaultVersion>master</defaultVersion>
         <implicit>false</implicit>
         <allowVersionOverride>true</allowVersionOverride>
         <includeInChangesets>true</includeInChangesets>
