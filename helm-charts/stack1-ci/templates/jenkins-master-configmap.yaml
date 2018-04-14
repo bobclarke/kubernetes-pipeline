@@ -170,7 +170,7 @@ data:
           <jenkins.branch.BranchSource>
             <source class="jenkins.plugins.git.GitSCMSource" plugin="git@3.7.0">
               <id>082319fe-2efb-4858-8198-3080b08cab9b</id>
-              <remote>https://github.com/bobclarke/hw.git</remote>
+              <remote>{{ .Values.repo }}</remote>
               <credentialsId></credentialsId>
               <traits>
                 <jenkins.plugins.git.traits.BranchDiscoveryTrait/>
