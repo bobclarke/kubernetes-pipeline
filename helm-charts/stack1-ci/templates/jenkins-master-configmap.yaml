@@ -44,7 +44,7 @@ data:
     <hudson>
       <disabledAdministrativeMonitors/>
       <version>lts</version>
-      <numExecutors>0</numExecutors>
+      <numExecutors>10</numExecutors>
       <mode>NORMAL</mode>
       <useSecurity>true</useSecurity>
       <authorizationStrategy class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy">
