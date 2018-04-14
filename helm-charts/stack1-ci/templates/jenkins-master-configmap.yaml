@@ -128,6 +128,7 @@ data:
       <noUsageStatistics>true</noUsageStatistics>
     </hudson>
 
+  # Multibranch pipeline job
   job.xml: |-
     <?xml version='1.1' encoding='UTF-8'?>
     <org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject plugin="workflow-multibranch@2.17">
@@ -155,7 +156,12 @@ data:
         <daysToKeep>-1</daysToKeep>
         <numToKeep>-1</numToKeep>
       </orphanedItemStrategy>
-      <triggers/>
+      <triggers>
+        <com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger plugin="cloudbees-folder@6.4">
+          <spec>* * * * *</spec>
+          <interval>60000</interval>
+        </com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger>
+      </triggers>
       <disabled>false</disabled>
       <sources class="jenkins.branch.MultiBranchProject$BranchSourceList" plugin="branch-api@2.0.19">
         <data>
@@ -182,6 +188,7 @@ data:
       </factory>
     </org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject>
 
+  # Pipeline library
   org.jenkinsci.plugins.workflow.libs.GlobalLibraries.xml: |-
     <?xml version='1.1' encoding='UTF-8'?>
     <org.jenkinsci.plugins.workflow.libs.GlobalLibraries plugin="workflow-cps-global-lib@2.9">
