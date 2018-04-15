@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: cluster-ingress-rules
+spec:
+  rules:
+  - host: minikube
+    http:
+      paths:
+      - path: /jenkins
+        backend:
+          serviceName: hello-world
+          servicePort: 8080
