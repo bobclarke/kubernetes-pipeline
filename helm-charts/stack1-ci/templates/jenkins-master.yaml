@@ -1,0 +1,372 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-jenkins
+  labels:
+    component: "{{ .Release.Name }}-jenkins-master"
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      component: "{{ .Release.Name }}-jenkins-master"
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-jenkins
+        component: "{{ .Release.Name }}-jenkins-master"
+      annotations:
+        checksum/config: 91496c3e313e4a17590717b4a10615a0c10f90250e6e40ab23ffc92d88fc3b8a
+    spec:
+      securityContext:
+        runAsUser: 0
+      serviceAccountName: "default"
+
+      initContainers:
+        - name: "copy-default-config"
+          image: "jenkins/jenkins:lts"
+          imagePullPolicy: "Always"
+          command: [ "sh", "/var/jenkins_config/apply_config.sh" ]
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+            - mountPath: /usr/share/jenkins/ref/plugins/
+              name: plugin-dir
+            - mountPath: /usr/share/jenkins/ref/secrets/
+              name: secrets-dir
+
+      containers:
+        - name: {{ .Release.Name }}-jenkins
+          image: "jenkins/jenkins:lts"
+          imagePullPolicy: "Always"
+          args: [ "--argumentsRealm.passwd.$(ADMIN_USER)=$(ADMIN_PASSWORD)",  "--argumentsRealm.roles.$(ADMIN_USER)=admin"]
+          env:
+            - name: JAVA_OPTS
+              value: ""
+            - name: JENKINS_OPTS
+              value: ""
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-jenkins
+                  key: jenkins-admin-password
+            - name: ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-jenkins
+                  key: jenkins-admin-user
+          ports:
+            - containerPort: 8080
+              name: http
+            - containerPort: 50000
+              name: slavelistener
+          livenessProbe:
+            httpGet:
+              path: /login
+              port: http
+            initialDelaySeconds: 60
+          readinessProbe:
+            httpGet:
+              path: /login
+              port: http
+            initialDelaySeconds: 60
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+          volumeMounts:
+            - mountPath: /var/jenkins_home
+              name: jenkins-home
+              readOnly: false
+            - mountPath: /var/jenkins_config
+              name: jenkins-config
+              readOnly: true
+            - mountPath: /usr/share/jenkins/ref/plugins/
+              name: plugin-dir
+              readOnly: false
+            - mountPath: /usr/share/jenkins/ref/secrets/
+              name: secrets-dir
+              readOnly: false
+      volumes:
+      - name: jenkins-config
+        configMap:
+          name: {{ .Release.Name }}-jenkins-config
+
+      - name: jenkins-home
+      {{- if eq .Values.platform "minikube" }}
+        hostPath:
+          path: /tmp/volumes/{{ .Release.Name }}-jenkins/home
+      {{ else }}
+        # Need to update this for EBS (if using AWS)
+        emptyDir: {}      
+      {{ end }}
+
+      - name: plugin-dir
+        emptyDir: {}
+
+      - name: secrets-dir
+        emptyDir: {}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: {{ .Release.Name }}.k8s1.bobclarke.info.
+  name: {{ .Release.Name }}-jenkins
+  labels:
+    app: {{ .Release.Name }}-jenkins
+    component: "{{ .Release.Name }}-jenkins-master"
+spec:
+  ports:
+    - port: 8080
+      name: http
+      targetPort: 8080
+  selector:
+    component: "{{ .Release.Name }}-jenkins-master"
+  type: "{{ .Values.service.type }}"---
+apiVersion: v1
+kind: ConfigMap
+
+metadata:
+  name: {{ .Release.Name }}-jenkins-config
+
+data:
+  apply_config.sh: |-
+    mkdir -p /usr/share/jenkins/ref/secrets/;
+    echo "false" > /usr/share/jenkins/ref/secrets/slave-to-master-security-kill-switch;
+
+    # Copy configuration files to /var/jenkins_home
+    cp -n /var/jenkins_config/config.xml /var/jenkins_home;
+    cp -n /var/jenkins_config/scriptApproval.xml /var/jenkins_home;
+    cp -n /var/jenkins_config/org.jenkinsci.plugins.workflow.libs.GlobalLibraries.xml /var/jenkins_home
+
+    # Install plugins
+    cp /var/jenkins_config/plugins.txt /var/jenkins_home;
+    rm -rf /usr/share/jenkins/ref/plugins/*.lock
+    /usr/local/bin/install-plugins.sh `echo $(cat /var/jenkins_home/plugins.txt)`;
+
+    # Create job
+    mkdir -p /var/jenkins_home/jobs/{{ .Release.Name }}
+    cp -n /var/jenkins_config/job.xml /var/jenkins_home/jobs/{{ .Release.Name }}/config.xml;
+
+  scriptApproval.xml: |-
+    <scriptApproval plugin="script-security@1.41">
+      <approvedScriptHashes/>
+      <approvedSignatures>
+        <string>method groovy.json.JsonSlurperClassic parseText java.lang.String</string>
+        <string>new groovy.json.JsonSlurperClassic</string>
+        <string>staticMethod java.lang.System exit int</string>
+      </approvedSignatures>
+      <aclApprovedSignatures/>
+      <approvedClasspathEntries/>
+      <pendingScripts/>
+      <pendingSignatures/>
+      <pendingClasspathEntries/>
+    </scriptApproval>
+
+  config.xml: |-
+    <?xml version='1.0' encoding='UTF-8'?>
+    <hudson>
+      <disabledAdministrativeMonitors/>
+      <version>lts</version>
+      <numExecutors>10</numExecutors>
+      <mode>NORMAL</mode>
+      <useSecurity>true</useSecurity>
+      <authorizationStrategy class="hudson.security.FullControlOnceLoggedInAuthorizationStrategy">
+        <denyAnonymousReadAccess>true</denyAnonymousReadAccess>
+      </authorizationStrategy>
+      <securityRealm class="hudson.security.LegacySecurityRealm"/>
+      <disableRememberMe>false</disableRememberMe>
+      <projectNamingStrategy class="jenkins.model.ProjectNamingStrategy$DefaultProjectNamingStrategy"/>
+      <workspaceDir>${JENKINS_HOME}/workspace/${ITEM_FULLNAME}</workspaceDir>
+      <buildsDir>${ITEM_ROOTDIR}/builds</buildsDir>
+      <markupFormatter class="hudson.markup.EscapedMarkupFormatter"/>
+      <jdks/>
+      <viewsTabBar class="hudson.views.DefaultViewsTabBar"/>
+      <myViewsTabBar class="hudson.views.DefaultMyViewsTabBar"/>
+      <clouds>
+        <org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud plugin="kubernetes@1.1">
+          <name>kubernetes</name>
+          <templates>
+            <org.csanchez.jenkins.plugins.kubernetes.PodTemplate>
+              <inheritFrom></inheritFrom>
+              <name>default</name>
+              <instanceCap>2147483647</instanceCap>
+              <idleMinutes>0</idleMinutes>
+              <label>jenkins-jenkins-slave</label>
+              <nodeSelector></nodeSelector>
+                <nodeUsageMode>NORMAL</nodeUsageMode>
+              <volumes>
+              </volumes>
+              <containers>
+                <org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+                  <name>jnlp</name>
+                  <image>jenkins/jnlp-slave:3.10-1</image>
+                  <privileged>false</privileged>
+                  <alwaysPullImage>false</alwaysPullImage>
+                  <workingDir>/home/jenkins</workingDir>
+                  <command></command>
+                  <args>${computer.jnlpmac} ${computer.name}</args>
+                  <ttyEnabled>false</ttyEnabled>
+                  <resourceRequestCpu>200m</resourceRequestCpu>
+                  <resourceRequestMemory>256Mi</resourceRequestMemory>
+                  <resourceLimitCpu>200m</resourceLimitCpu>
+                  <resourceLimitMemory>256Mi</resourceLimitMemory>
+                  <envVars>
+                    <org.csanchez.jenkins.plugins.kubernetes.ContainerEnvVar>
+                      <key>JENKINS_URL</key>
+                      <value>http://jenkins-jenkins:8080</value>
+                    </org.csanchez.jenkins.plugins.kubernetes.ContainerEnvVar>
+                  </envVars>
+                </org.csanchez.jenkins.plugins.kubernetes.ContainerTemplate>
+              </containers>
+              <envVars/>
+              <annotations/>
+              <imagePullSecrets/>
+              <nodeProperties/>
+            </org.csanchez.jenkins.plugins.kubernetes.PodTemplate></templates>
+          <serverUrl>https://kubernetes.default</serverUrl>
+          <skipTlsVerify>false</skipTlsVerify>
+          <namespace>default</namespace>
+          <jenkinsUrl>http://jenkins-jenkins:8080</jenkinsUrl>
+          <jenkinsTunnel>jenkins-jenkins-agent:50000</jenkinsTunnel>
+          <containerCap>10</containerCap>
+          <retentionTimeout>5</retentionTimeout>
+          <connectTimeout>0</connectTimeout>
+          <readTimeout>0</readTimeout>
+        </org.csanchez.jenkins.plugins.kubernetes.KubernetesCloud>
+      </clouds>
+      <quietPeriod>5</quietPeriod>
+      <scmCheckoutRetryCount>0</scmCheckoutRetryCount>
+      <views>
+        <hudson.model.AllView>
+          <owner class="hudson" reference="../../.."/>
+          <name>All</name>
+          <filterExecutors>false</filterExecutors>
+          <filterQueue>false</filterQueue>
+          <properties class="hudson.model.View$PropertyList"/>
+        </hudson.model.AllView>
+      </views>
+      <primaryView>All</primaryView>
+      <slaveAgentPort>50000</slaveAgentPort>
+      <label></label>
+      <nodeProperties/>
+      <globalNodeProperties/>
+      <noUsageStatistics>true</noUsageStatistics>
+    </hudson>
+
+  # Multibranch pipeline job
+  job.xml: |-
+    <?xml version='1.1' encoding='UTF-8'?>
+    <org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject plugin="workflow-multibranch@2.17">
+      <actions/>
+      <description></description>
+      <properties>
+        <org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig plugin="pipeline-model-definition@1.2.8">
+          <dockerLabel></dockerLabel>
+          <registry plugin="docker-commons@1.11"/>
+        </org.jenkinsci.plugins.pipeline.modeldefinition.config.FolderConfig>
+      </properties>
+      <folderViews class="jenkins.branch.MultiBranchProjectViewHolder" plugin="branch-api@2.0.19">
+        <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+      </folderViews>
+      <healthMetrics>
+        <com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric plugin="cloudbees-folder@6.4">
+          <nonRecursive>false</nonRecursive>
+        </com.cloudbees.hudson.plugins.folder.health.WorstChildHealthMetric>
+      </healthMetrics>
+      <icon class="jenkins.branch.MetadataActionFolderIcon" plugin="branch-api@2.0.19">
+        <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+      </icon>
+      <orphanedItemStrategy class="com.cloudbees.hudson.plugins.folder.computed.DefaultOrphanedItemStrategy" plugin="cloudbees-folder@6.4">
+        <pruneDeadBranches>true</pruneDeadBranches>
+        <daysToKeep>-1</daysToKeep>
+        <numToKeep>-1</numToKeep>
+      </orphanedItemStrategy>
+      <triggers>
+        <com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger plugin="cloudbees-folder@6.4">
+          <spec>* * * * *</spec>
+          <interval>60000</interval>
+        </com.cloudbees.hudson.plugins.folder.computed.PeriodicFolderTrigger>
+      </triggers>
+      <disabled>false</disabled>
+      <sources class="jenkins.branch.MultiBranchProject$BranchSourceList" plugin="branch-api@2.0.19">
+        <data>
+          <jenkins.branch.BranchSource>
+            <source class="jenkins.plugins.git.GitSCMSource" plugin="git@3.7.0">
+              <id>082319fe-2efb-4858-8198-3080b08cab9b</id>
+              <remote>{{ .Values.repo }}</remote>
+              <credentialsId></credentialsId>
+              <traits>
+                <jenkins.plugins.git.traits.BranchDiscoveryTrait/>
+                <jenkins.plugins.git.traits.TagDiscoveryTrait/>
+              </traits>
+            </source>
+            <strategy class="jenkins.branch.DefaultBranchPropertyStrategy">
+              <properties class="empty-list"/>
+            </strategy>
+          </jenkins.branch.BranchSource>
+        </data>
+        <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+      </sources>
+      <factory class="org.jenkinsci.plugins.workflow.multibranch.WorkflowBranchProjectFactory">
+        <owner class="org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject" reference="../.."/>
+        <scriptPath>Jenkinsfile</scriptPath>
+      </factory>
+    </org.jenkinsci.plugins.workflow.multibranch.WorkflowMultiBranchProject>
+
+  # Pipeline library
+  org.jenkinsci.plugins.workflow.libs.GlobalLibraries.xml: |-
+    <?xml version='1.1' encoding='UTF-8'?>
+    <org.jenkinsci.plugins.workflow.libs.GlobalLibraries plugin="workflow-cps-global-lib@2.9">
+    <libraries>
+      <org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+        <name>stack1-lib</name>
+        <retriever class="org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever">
+          <scm class="jenkins.plugins.git.GitSCMSource" plugin="git@3.7.0">
+            <id>a25cc6dc-97fa-4085-87d6-e34bb76f9f18</id>
+            <remote>https://github.com/bobclarke/kubernetes-pipeline-lib.git</remote>
+            <credentialsId></credentialsId>
+            <traits>
+              <jenkins.plugins.git.traits.BranchDiscoveryTrait/>
+            </traits>
+          </scm>
+        </retriever>
+        <defaultVersion>master</defaultVersion>
+        <implicit>false</implicit>
+        <allowVersionOverride>true</allowVersionOverride>
+        <includeInChangesets>true</includeInChangesets>
+      </org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+      <org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+        <name></name>
+        <implicit>false</implicit>
+        <allowVersionOverride>true</allowVersionOverride>
+        <includeInChangesets>true</includeInChangesets>
+      </org.jenkinsci.plugins.workflow.libs.LibraryConfiguration>
+    </libraries>
+
+  plugins.txt: |-
+    workflow-aggregator:2.5
+    workflow-job:2.17
+    workflow-multibranch:2.17
+    credentials-binding:1.15
+    git:3.7.0
+    blueocean:1.4.2
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ .Release.Name }}-jenkins
+  labels:
+    app: {{ .Release.Name }}-jenkins
+type: Opaque
+data:
+  jenkins-admin-password: "YWRtaW4="
+  jenkins-admin-user: "YWRtaW4="
+  

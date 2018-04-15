@@ -1,0 +1,113 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ingress-rules
+spec:
+  rules:
+  - host: minikube
+    http:
+      paths:
+      - path: /jenkins
+        backend:
+          serviceName: hello-world
+          servicePort: 8080
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ingress-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ingress-controller
+  template:
+    metadata:
+      labels:
+        app: ingress-controller
+    spec:
+      containers:
+        - name: nginx-ingress-controller
+          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.11.0
+          args:
+            - /nginx-ingress-controller
+            - --default-backend-service=$(POD_NAMESPACE)/default-http-backend
+            - --annotations-prefix=nginx.ingress.kubernetes.io
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          ports:
+          - name: http
+            containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ingress-controller
+spec:
+  type: NodePort
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    nodePort: 32000
+  selector:
+    app: ingress-controller
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: default-http-backend
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: default-http-backend
+    spec:
+      terminationGracePeriodSeconds: 60
+      containers:
+      - name: default-http-backend
+        # Any image is permissable as long as:
+        # 1. It serves a 404 page at /
+        # 2. It serves 200 on a /healthz endpoint
+        image: gcr.io/google_containers/defaultbackend:1.0
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
+          requests:
+            cpu: 10m
+            memory: 20Mi
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: default-http-backend
+spec:
+  selector:
+    app: default-http-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP
