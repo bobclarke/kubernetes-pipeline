@@ -5,7 +5,21 @@ Experimenting with building an "Ephemeral CI/CD pipleine in a box"
 
 Work in progress
 
-## Todo
+### To spin up a project
+```
+clone this repo 
+cd helm-charts 
+helm upgrade --install <project name> stack1-ci --namespace <project name> --set platform=<minikube|aws> --set repo=<repo url>
+
+exmaple:
+helm upgrade --install test-project stack1-ci --namespace test-project --set platform=minikube --set repo=https://github.com/bobclarke/test-project.git
+
+To delete the project:
+helm delete --purge test-project
+```
+
+
+### Todo
 IAM Stuff to be automated
 ```
 aws iam create-group --group-name kops
@@ -20,7 +34,7 @@ aws iam add-user-to-group --user-name kops --group-name kops
 aws iam create-access-key --user-name kops
 
 ```
-# Kops config 
+### Kops config 
 
 ```
 apiVersion: kops/v1alpha2
