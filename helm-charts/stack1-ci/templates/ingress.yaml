@@ -1,4 +1,7 @@
 
+#---------------------------------------------------------------------
+# Ingress controller Service
+#---------------------------------------------------------------------
 ---
 apiVersion: v1
 kind: Service
@@ -13,7 +16,9 @@ spec:
   selector:
     app: ingress-controller
 
-
+#---------------------------------------------------------------------
+# Ingress controller Deployment
+#---------------------------------------------------------------------
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -53,6 +58,9 @@ spec:
             containerPort: 443
             hostPort: 443
 
+#---------------------------------------------------------------------
+# Ingress resource - the things that sets up the traffic routing rules
+#---------------------------------------------------------------------
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -66,8 +74,25 @@ spec:
       paths:
       - path: /jenkins
         backend:
-          serviceName: jenkins
+          serviceName: {{ .Release.Name }}-jenkins
           servicePort: 8080
+
+#---------------------------------------------------------------------
+# Default backend service and Deployment
+#---------------------------------------------------------------------
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: default-http-backend
+spec:
+  selector:
+    app: default-http-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+  type: ClusterIP          
 
 ---
 apiVersion: extensions/v1beta1
@@ -104,16 +129,4 @@ spec:
           requests:
             cpu: 10m
             memory: 20Mi
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: default-http-backend
-spec:
-  selector:
-    app: default-http-backend
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 8080
-  type: ClusterIP
+
