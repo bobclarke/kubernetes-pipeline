@@ -72,7 +72,7 @@ spec:
   rules: 
   - http:
       paths:
-      - path: /jenkins
+      - path: /ci
         backend:
           serviceName: {{ .Release.Name }}-jenkins
           servicePort: 8080
