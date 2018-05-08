@@ -1,4 +1,5 @@
 **/terraform.tfvars
+**/*.auto.tfvars
 **/terraform.tfstate*
 **/*.orig
 **/kops

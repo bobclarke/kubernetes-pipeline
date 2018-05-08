@@ -2,7 +2,7 @@ variable "access_key" {}
 variable "secret_key" {}
 variable "key_name" {}
 variable "private_key_path" {
-	default =  "~/kismatic/kismatic.pem"
+	default =  "~/aws/keys/gdp-devops.pem"
 }
 
 variable "instance_type" {

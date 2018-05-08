@@ -34,6 +34,15 @@ aws iam add-user-to-group --user-name kops --group-name kops
 aws iam create-access-key --user-name kops
 
 ```
+### Terraform
+```
+For all files which match terraform.tfvars or *.auto.tfvars present in the current directory, Terraform automatically loads them to populate variables. If you populate this with you access key and secret key you'll obviously want to put an entry in your .gitignore so you don't push them to scm. Something like this will do:
+
+**/terraform.tfvars
+**/*.auto.tfvars
+
+```
+
 ### Kops config 
 
 ```
