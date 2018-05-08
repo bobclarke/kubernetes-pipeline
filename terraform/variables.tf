@@ -1,6 +1,7 @@
 variable "access_key" {}
 variable "secret_key" {}
 variable "key_name" {}
+
 variable "private_key_path" {
 	default =  "~/aws/keys/gdp-devops.pem"
 }
@@ -9,8 +10,8 @@ variable "instance_type" {
   default = "t2.micro"
 }
 
-variable "aws_region" {
-  default     = "us-east-1"
+provider "aws" {
+  region = "ca-central-1"
 }
 
 variable "aws_amis" {
