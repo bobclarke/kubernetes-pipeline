@@ -2,9 +2,7 @@ variable "access_key" {}
 variable "secret_key" {}
 variable "key_name" {}
 
-variable "private_key_path" {
-	default =  "~/aws/keys/gdp-devops.pem"
-}
+variable "private_key_path" {}
 
 variable "instance_type" {
   default = "t2.micro"
