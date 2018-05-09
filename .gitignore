@@ -2,6 +2,9 @@
 **/*.auto.tfvars
 **/terraform.tfstate*
 **/*.orig
+**/*.old
+**/*.log
+**/*.logs
 **/kops
 kismatic/**
 terraform/.terraform/**
